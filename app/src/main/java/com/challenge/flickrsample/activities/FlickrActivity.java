@@ -105,15 +105,21 @@ public class FlickrActivity extends AppCompatActivity implements /*ResponseListe
         FetchImagesSingleton.getInstance().setCallBackListener(this);
     }
 
+    /**
+     * Handles loader visibility
+     *
+     * @param show - true - show, false - hide
+     */
     @Override
     public void showOrHideLoader(boolean show) {
-        if (show) {
-            mProgressBar.setVisibility(View.VISIBLE);
-        } else {
-            mProgressBar.setVisibility(View.GONE);
-        }
+        mProgressBar.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
+    /**
+     * Populates the list post retrieving the results
+     *
+     * @param object - response object
+     */
     @Override
     public void onSuccess(Object object) {
         FlickrResponsePojo responsePojo = (FlickrResponsePojo) object;
@@ -124,6 +130,11 @@ public class FlickrActivity extends AppCompatActivity implements /*ResponseListe
         }
     }
 
+    /**
+     * Handles failure cases
+     *
+     * @param object message object
+     */
     @Override
     public void onFailure(Object object) {
         if (mRecyclerView.getAdapter().getItemCount() == 0) {
