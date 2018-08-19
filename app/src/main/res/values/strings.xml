@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">FlickrSample</string>
+    <string name="search_hint">Enter a keyword eg.kittens</string>
+    <string name="no_images">No images available.\nPlease search using a keyword</string>
+</resources>
