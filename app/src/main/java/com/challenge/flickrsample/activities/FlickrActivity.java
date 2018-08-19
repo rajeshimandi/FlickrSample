@@ -15,26 +15,23 @@ import android.widget.TextView;
 
 import com.challenge.flickrsample.R;
 import com.challenge.flickrsample.adapters.FlickrAdapter;
-import com.challenge.flickrsample.netwok.FetchResponseAsync;
-import com.challenge.flickrsample.netwok.ResponseListener;
 import com.challenge.flickrsample.pojos.FlickrResponsePojo;
 import com.challenge.flickrsample.pojos.PhotoItem;
+import com.challenge.flickrsample.singletons.FetchImagesSingleton;
 import com.challenge.flickrsample.utils.Constants;
-import com.challenge.flickrsample.utils.NetworkUtils;
 import com.challenge.flickrsample.utils.ToastUtils;
 import com.challenge.flickrsample.utils.Utils;
-import com.challenge.flickrsample.widgets.CustomRecyclerView;
 
 import java.util.ArrayList;
 
 /**
  * Activity that displays images based on user search. Handles endless scroll
  */
-public class FlickrActivity extends AppCompatActivity implements ResponseListener {
+public class FlickrActivity extends AppCompatActivity implements /*ResponseListener,*/ FetchImagesSingleton.APICallbackListener {
 
     private int pageCount = 1; // maintains current page number
     private ProgressBar mProgressBar;
-    private CustomRecyclerView mRecyclerView;
+    private RecyclerView mRecyclerView;
     private EditText mSearch;
     private TextView mEmptyView;
 
@@ -50,11 +47,10 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_flickr);
 
-        initViews();
+        init();
 
         final GridLayoutManager layoutManager = new GridLayoutManager(this, 3);
         mRecyclerView.setLayoutManager(layoutManager);
-        mRecyclerView.setEmptyView(mEmptyView);
 
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
 
@@ -66,7 +62,7 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
                     if (layoutManager.findLastVisibleItemPosition() >= layoutManager.getItemCount() - 1) {
                         pageCount++;
                         if (pageCount < mTotalPages) {
-                            loadImages(mSearch.getText().toString().trim());
+                            FetchImagesSingleton.getInstance().loadImages(FlickrActivity.this, mSearch.getText().toString().trim(), pageCount);
                         }
                     }
                 }
@@ -84,7 +80,7 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
                         if (null != mPhotosList) {
                             mPhotosList.clear();
                         }
-                        loadImages(keyword);
+                        FetchImagesSingleton.getInstance().loadImages(FlickrActivity.this, mSearch.getText().toString().trim(), pageCount);
                     } else {
                         ToastUtils.showShortToast(FlickrActivity.this, Constants.VALID_KEYWORD);
                     }
@@ -101,64 +97,39 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
     /**
      * Initializes views
      */
-    private void initViews() {
+    private void init() {
         mRecyclerView = findViewById(R.id.recyclerView);
         mEmptyView = findViewById(R.id.emptyView);
         mSearch = findViewById(R.id.search);
         mProgressBar = findViewById(R.id.progressbar);
+        FetchImagesSingleton.getInstance().setCallBackListener(this);
     }
 
-    /**
-     * Fetches images and sets to recycler view
-     *
-     * @param keyword - keyword entered
-     */
-    private void loadImages(String keyword) {
-
-        if (NetworkUtils.isNetworkAvailable(FlickrActivity.this)) {
-
-            FetchResponseAsync imagesAsync = new FetchResponseAsync(this, FlickrResponsePojo.class);
-            imagesAsync.execute(Utils.getImageListURL(pageCount, keyword));
-
+    @Override
+    public void showOrHideLoader(boolean show) {
+        if (show) {
+            mProgressBar.setVisibility(View.VISIBLE);
         } else {
-            ToastUtils.showShortToast(FlickrActivity.this, Constants.INTERNET_ERROR);
+            mProgressBar.setVisibility(View.GONE);
         }
-
     }
 
     @Override
-    public void onRequestStart() {
-        mProgressBar.setVisibility(View.VISIBLE);
-    }
-
-    @Override
-    public void onResponse(Object response) {
-
-        if (null != response && response instanceof FlickrResponsePojo) {
-
-            FlickrResponsePojo responsePojo = (FlickrResponsePojo) response;
-            if (responsePojo.getStat().equals("ok")) {
-                mTotalPages = responsePojo.getPhotos().getPages();
-                populateAdapter(responsePojo);
-            } else {
-                if (!TextUtils.isEmpty(responsePojo.getMessage())) {
-                    ToastUtils.showShortToast(FlickrActivity.this, responsePojo.getMessage());
-                } else {
-                    ToastUtils.showShortToast(FlickrActivity.this, Constants.ERROR);
-                }
-            }
-
-        } else {
-            ToastUtils.showShortToast(FlickrActivity.this, Constants.ERROR);
+    public void onSuccess(Object object) {
+        FlickrResponsePojo responsePojo = (FlickrResponsePojo) object;
+        mTotalPages = responsePojo.getPhotos().getPages();
+        populateAdapter(responsePojo);
+        if (mRecyclerView.getAdapter().getItemCount() > 0) {
+            mEmptyView.setVisibility(View.GONE);
         }
-
-        mProgressBar.setVisibility(View.GONE);
     }
 
     @Override
-    public void onError(Object error) {
-        mProgressBar.setVisibility(View.GONE);
-        ToastUtils.showShortToast(FlickrActivity.this, error.toString());
+    public void onFailure(Object object) {
+        if (mRecyclerView.getAdapter().getItemCount() == 0) {
+            mEmptyView.setVisibility(View.VISIBLE);
+        }
+        ToastUtils.showShortToast(FlickrActivity.this, object.toString());
     }
 
     /**

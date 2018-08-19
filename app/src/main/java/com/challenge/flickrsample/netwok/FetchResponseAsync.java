@@ -25,7 +25,7 @@ public class FetchResponseAsync extends AsyncTask<String, Void, Object> {
 
     private ResponseListener mResponseListener;
 
-    public FetchResponseAsync(ResponseListener responseListener, Class className) {
+    public FetchResponseAsync(ResponseListener responseListener) {
         mResponseListener = responseListener;
     }
 
