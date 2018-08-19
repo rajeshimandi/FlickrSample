@@ -14,6 +14,16 @@ public class Constants {
 
     public final static String EQUALS = "=";
 
+    public final static String SLASH = "/";
+
+    public final static String UNDERSCORE = "_";
+
+    public final static String JPG_EXT = ".jpg";
+
+    public final static String IMAGE_URL_ROOT = "http://farm";
+
+    public final static String IMAGE_URL_DOMAIN = ".static.flickr.com/";
+
     public final static String PAGE = "page";
 
     public final static String VALID_KEYWORD = "Please enter a Keyword";

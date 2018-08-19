@@ -6,7 +6,9 @@ import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.view.View;
 
-
+/**
+ * Custom recycler view class that handles empty view based on item count
+ */
 public class CustomRecyclerView extends RecyclerView {
 
     @Nullable

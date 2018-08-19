@@ -2,6 +2,7 @@ package com.challenge.flickrsample.adapters;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.widget.ImageView;
 
 import com.challenge.flickrsample.R;
 import com.challenge.flickrsample.pojos.PhotoItem;
+import com.challenge.flickrsample.utils.Utils;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -21,10 +23,8 @@ import java.util.ArrayList;
 public class FlickrAdapter extends RecyclerView.Adapter<FlickrAdapter.ImageViewHolder> {
 
     private ArrayList<PhotoItem> mPhotosList;
-    private Context mContext;
 
-    public FlickrAdapter(Context context, ArrayList<PhotoItem> photosList) {
-        mContext = context;
+    public FlickrAdapter(ArrayList<PhotoItem> photosList) {
         this.mPhotosList = photosList;
     }
 
@@ -42,19 +42,11 @@ public class FlickrAdapter extends RecyclerView.Adapter<FlickrAdapter.ImageViewH
 
         PhotoItem photoItem = mPhotosList.get(position);
 
-        StringBuilder imageUrl = new StringBuilder("http://farm");
-        imageUrl.append(photoItem.getFarm())
-                .append(".static.flickr.com/")
-                .append(photoItem.getServer())
-                .append("/")
-                .append(photoItem.getId())
-                .append("_")
-                .append(photoItem.getSecret())
-                .append(".jpg");
+        String imageUrl = Utils.getImageURL(photoItem.getFarm(), photoItem.getServer(), photoItem.getId(), photoItem.getSecret());
 
         //new FetchImageAsync(holder.imageView).execute(imageUrl.toString());
 
-        Picasso.get().load(imageUrl.toString())
+        Picasso.get().load(imageUrl)
                 .placeholder(R.drawable.loader)
                 .into(holder.imageView);
 
@@ -65,7 +57,10 @@ public class FlickrAdapter extends RecyclerView.Adapter<FlickrAdapter.ImageViewH
         return mPhotosList != null ? mPhotosList.size() : 0;
     }
 
-    public class ImageViewHolder extends RecyclerView.ViewHolder {
+    /**
+     * View Holder class
+     */
+    public static class ImageViewHolder extends RecyclerView.ViewHolder {
 
         ImageView imageView;
 

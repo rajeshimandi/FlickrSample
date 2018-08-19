@@ -18,7 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
- * Class that handles background operation
+ * Class that handles background API calls
  */
 
 public class FetchResponseAsync extends AsyncTask<String, Void, Object> {
@@ -77,7 +77,7 @@ public class FetchResponseAsync extends AsyncTask<String, Void, Object> {
     /**
      * Returns response a string
      *
-     * @param in inputstream
+     * @param in input stream
      * @return response
      */
     private String readStream(InputStream in) throws IOException {

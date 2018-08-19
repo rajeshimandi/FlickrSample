@@ -1,21 +1,17 @@
 package com.challenge.flickrsample.activities;
 
-import android.content.Context;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.Adapter;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.challenge.flickrsample.R;
 import com.challenge.flickrsample.adapters.FlickrAdapter;
@@ -25,18 +21,28 @@ import com.challenge.flickrsample.pojos.FlickrResponsePojo;
 import com.challenge.flickrsample.pojos.PhotoItem;
 import com.challenge.flickrsample.utils.Constants;
 import com.challenge.flickrsample.utils.NetworkUtils;
+import com.challenge.flickrsample.utils.ToastUtils;
+import com.challenge.flickrsample.utils.Utils;
 import com.challenge.flickrsample.widgets.CustomRecyclerView;
 
 import java.util.ArrayList;
 
+/**
+ * Activity that displays images based on user search. Handles endless scroll
+ */
 public class FlickrActivity extends AppCompatActivity implements ResponseListener {
 
-    private int pageCount = 1;
+    private int pageCount = 1; // maintains current page number
     private ProgressBar mProgressBar;
     private CustomRecyclerView mRecyclerView;
-    private ArrayList<PhotoItem> mPhotosList;
+    private EditText mSearch;
+    private TextView mEmptyView;
+
+    @Nullable
+    private ArrayList<PhotoItem> mPhotosList; // maintains photo details retrieved from API
+    @Nullable
     private FlickrAdapter mFlickrAdapter;
-    private int mTotalPages;
+    private int mTotalPages; // maintains max page count returned from API
     private long mBackPressedTime;
 
     @Override
@@ -44,14 +50,11 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_flickr);
 
-        mRecyclerView = findViewById(R.id.recyclerView);
-        TextView emptyView = findViewById(R.id.emptyView);
-        final EditText search = findViewById(R.id.search);
-        mProgressBar = findViewById(R.id.progressbar);
+        initViews();
 
         final GridLayoutManager layoutManager = new GridLayoutManager(this, 3);
         mRecyclerView.setLayoutManager(layoutManager);
-        mRecyclerView.setEmptyView(emptyView);
+        mRecyclerView.setEmptyView(mEmptyView);
 
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
 
@@ -63,7 +66,7 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
                     if (layoutManager.findLastVisibleItemPosition() >= layoutManager.getItemCount() - 1) {
                         pageCount++;
                         if (pageCount < mTotalPages) {
-                            loadImages(search.getText().toString().trim());
+                            loadImages(mSearch.getText().toString().trim());
                         }
                     }
                 }
@@ -72,20 +75,20 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
         });
 
 
-        search.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        mSearch.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    String keyword = search.getText().toString().trim();
+                    String keyword = mSearch.getText().toString().trim();
                     if (!TextUtils.isEmpty(keyword)) {
                         if (null != mPhotosList) {
                             mPhotosList.clear();
                         }
                         loadImages(keyword);
                     } else {
-                        Toast.makeText(FlickrActivity.this, Constants.VALID_KEYWORD, Toast.LENGTH_SHORT).show();
+                        ToastUtils.showShortToast(FlickrActivity.this, Constants.VALID_KEYWORD);
                     }
-                    hideKeyboard(FlickrActivity.this, search);
+                    Utils.hideKeyboard(FlickrActivity.this, mSearch);
                     return true;
                 }
                 return false;
@@ -93,6 +96,16 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
         });
 
 
+    }
+
+    /**
+     * Initializes views
+     */
+    private void initViews() {
+        mRecyclerView = findViewById(R.id.recyclerView);
+        mEmptyView = findViewById(R.id.emptyView);
+        mSearch = findViewById(R.id.search);
+        mProgressBar = findViewById(R.id.progressbar);
     }
 
     /**
@@ -104,20 +117,11 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
 
         if (NetworkUtils.isNetworkAvailable(FlickrActivity.this)) {
 
-            StringBuilder url = new StringBuilder(Constants.URL);
-            url.append(Constants.PAGE)
-                    .append(Constants.EQUALS)
-                    .append(pageCount)
-                    .append(Constants.AMP)
-                    .append(Constants.TEXT)
-                    .append(Constants.EQUALS)
-                    .append(keyword);
-
             FetchResponseAsync imagesAsync = new FetchResponseAsync(this, FlickrResponsePojo.class);
-            imagesAsync.execute(url.toString());
+            imagesAsync.execute(Utils.getImageListURL(pageCount, keyword));
 
         } else {
-            Toast.makeText(FlickrActivity.this, Constants.INTERNET_ERROR, Toast.LENGTH_SHORT).show();
+            ToastUtils.showShortToast(FlickrActivity.this, Constants.INTERNET_ERROR);
         }
 
     }
@@ -138,14 +142,14 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
                 populateAdapter(responsePojo);
             } else {
                 if (!TextUtils.isEmpty(responsePojo.getMessage())) {
-                    Toast.makeText(FlickrActivity.this, responsePojo.getMessage(), Toast.LENGTH_SHORT).show();
+                    ToastUtils.showShortToast(FlickrActivity.this, responsePojo.getMessage());
                 } else {
-                    Toast.makeText(FlickrActivity.this, Constants.ERROR, Toast.LENGTH_SHORT).show();
+                    ToastUtils.showShortToast(FlickrActivity.this, Constants.ERROR);
                 }
             }
 
         } else {
-            Toast.makeText(FlickrActivity.this, Constants.ERROR, Toast.LENGTH_SHORT).show();
+            ToastUtils.showShortToast(FlickrActivity.this, Constants.ERROR);
         }
 
         mProgressBar.setVisibility(View.GONE);
@@ -154,7 +158,7 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
     @Override
     public void onError(Object error) {
         mProgressBar.setVisibility(View.GONE);
-        Toast.makeText(FlickrActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
+        ToastUtils.showShortToast(FlickrActivity.this, error.toString());
     }
 
     /**
@@ -170,23 +174,10 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
         mPhotosList.addAll(responsePojo.getPhotos().getPhoto());
 
         if (mFlickrAdapter == null) {
-            mFlickrAdapter = new FlickrAdapter(FlickrActivity.this, mPhotosList);
+            mFlickrAdapter = new FlickrAdapter(mPhotosList);
             mRecyclerView.setAdapter(mFlickrAdapter);
         } else {
             mFlickrAdapter.notifyDataSetChanged();
-        }
-    }
-
-    /**
-     * Hides soft keypad
-     *
-     * @param context Activity context
-     * @param view    view
-     */
-    private void hideKeyboard(Context context, View view) {
-        if (null != view) {
-            InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
 
@@ -198,7 +189,7 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
         if (System.currentTimeMillis() < mBackPressedTime + 2000) {
             finish();
         } else {
-            Toast.makeText(FlickrActivity.this, Constants.BACK_MSG, Toast.LENGTH_SHORT).show();
+            ToastUtils.showShortToast(FlickrActivity.this, Constants.BACK_MSG);
             mBackPressedTime = System.currentTimeMillis();
         }
     }
