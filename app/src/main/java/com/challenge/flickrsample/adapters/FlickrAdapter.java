@@ -8,12 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
-//import com.bumptech.glide.Glide;
 import com.challenge.flickrsample.R;
-import com.challenge.flickrsample.netwok.FetchImageAsync;
 import com.challenge.flickrsample.pojos.PhotoItem;
-import com.challenge.flickrsample.pojos.Photos;
-import com.challenge.flickrsample.utils.Constants;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -57,7 +53,7 @@ public class FlickrAdapter extends RecyclerView.Adapter<FlickrAdapter.ImageViewH
                 .append(".jpg");
 
         //new FetchImageAsync(holder.imageView).execute(imageUrl.toString());
-        //Glide.with(mContext).load(imageUrl.toString()).thumbnail(R.drawable.loader).into(holder.imageView);
+
         Picasso.get().load(imageUrl.toString())
                 .placeholder(R.drawable.loader)
                 .into(holder.imageView);

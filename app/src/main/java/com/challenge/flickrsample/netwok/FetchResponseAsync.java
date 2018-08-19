@@ -5,7 +5,6 @@ import android.text.TextUtils;
 
 import com.challenge.flickrsample.utils.Constants;
 import com.challenge.flickrsample.utils.JsonParser;
-import com.challenge.flickrsample.utils.NetworkUtils;
 
 import org.json.JSONException;
 

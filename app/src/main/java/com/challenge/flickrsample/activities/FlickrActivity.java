@@ -60,21 +60,11 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
                 super.onScrollStateChanged(recyclerView, newState);
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
 
-                    Log.d(FlickrActivity.class.getSimpleName(), "findLastVisibleItemPosition:" + layoutManager.findLastVisibleItemPosition());
-                    Log.d(FlickrActivity.class.getSimpleName(), "getItemCount:" + layoutManager.getItemCount());
-
                     if (layoutManager.findLastVisibleItemPosition() >= layoutManager.getItemCount() - 1) {
-
-                        Log.d(FlickrActivity.class.getSimpleName(), "at scroll end");
                         pageCount++;
-                        Log.d(FlickrActivity.class.getSimpleName(), "pageCount:" + pageCount);
-                        Log.d(FlickrActivity.class.getSimpleName(), "totalPages:" + mTotalPages);
                         if (pageCount < mTotalPages) {
                             loadImages(search.getText().toString().trim());
-                        } else {
-                            Log.d(FlickrActivity.class.getSimpleName(), "Done Loading");
                         }
-
                     }
                 }
             }
@@ -122,8 +112,6 @@ public class FlickrActivity extends AppCompatActivity implements ResponseListene
                     .append(Constants.TEXT)
                     .append(Constants.EQUALS)
                     .append(keyword);
-
-            Log.d(FlickrActivity.class.getSimpleName(), "URL:" + url.toString());
 
             FetchResponseAsync imagesAsync = new FetchResponseAsync(this, FlickrResponsePojo.class);
             imagesAsync.execute(url.toString());
